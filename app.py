@@ -1,51 +1,110 @@
-# app.py
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
+import numpy as np
+import cv2 as cv
+from sketchbook import Sketch
+from edges import Edges
+
+from PIL import Image, ImageOps
+
+
 app = Flask(__name__)
 
-@app.route('/getmsg/', methods=['GET'])
-def respond():
-    # Retrieve the name from url parameter
-    name = request.args.get("name", None)
-
-    # For debugging
-    print(f"got name {name}")
-
-    response = {}
-
-    # Check if user sent a name at all
-    if not name:
-        response["ERROR"] = "no name found, please send a name."
-    # Check if the user entered a number not a name
-    elif str(name).isdigit():
-        response["ERROR"] = "name can't be numeric."
-    # Now the user entered a valid name
-    else:
-        response["MESSAGE"] = f"Welcome {name} to our awesome platform!!"
-
-    # Return the response in json format
-    return jsonify(response)
-
-@app.route('/post/', methods=['POST'])
-def post_something():
-    param = request.form.get('name')
-    print(param)
-    # You can add the test cases you made in the previous function, but in our case here you are just testing the POST functionality
-    if param:
-        return jsonify({
-            "Message": f"Welcome {name} to our awesome platform!!",
-            # Add this option to distinct the POST request
-            "METHOD" : "POST"
-        })
-    else:
-        return jsonify({
-            "ERROR": "no name found, please send a name."
-        })
-
-# A welcome message to test our server
 @app.route('/')
 def index():
-    return "<h1>Welcome to our server !!</h1>"
+    return render_template('index.html')
 
-if __name__ == '__main__':
-    # Threaded option to enable multiple instances for multiple user access support
-    app.run(threaded=True, port=5000)
+@app.route('/sketch', methods=['POST'])
+def sketch():
+    r = request
+
+    # f = r.files.get('image', False)
+    f = request.files['image'].read()
+
+    # print(file)
+
+    # img = cv.imread(f,0)
+
+    #convert string data to numpy array
+    npimg = np.fromstring(f, np.uint8)
+    # convert numpy array to image
+    img = cv.imdecode(npimg, cv.IMREAD_COLOR)
+
+    
+
+    
+        
+    sketch = Sketch(img).sketch()
+    # bg = Background(img.size, octaves=6).background()
+    edges = Edges(img).edges()
+    #sketchTrans = cv.cvtColor(sketch, cv.COLOR_GRAY2RGBA)
+
+    mask = edges[3]
+    sketch = cv.bitwise_and(sketch, edges, edges)
+    (thresh, sketch) = cv.threshold(sketch, 240, 255, cv.THRESH_BINARY)
+    #sketch = cv.multiply(sketch, np.array(bg), scale=(1./128))
+
+    cv.imwrite("final.png", sketch)
+
+
+
+
+    h, w = sketch.shape[:2]
+
+    img = cv.medianBlur(sketch,5)
+
+    # final = Image.fromarray(img)
+    # final.show()
+    
+    # return Response(response={"hello": "there"}, status=200, mimetype="application/json")
+    
+    th2 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_MEAN_C,\
+                cv.THRESH_BINARY_INV,11,2)
+
+    th3 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
+                cv.THRESH_BINARY_INV,11,2)
+
+    # (thresh, sketch) = cv.threshold(sketch, 240, 255, cv.THRESH_BINARY)
+    contours, hierarchy = cv.findContours(th3, cv.RETR_EXTERNAL , cv.CHAIN_APPROX_TC89_L1)
+
+    # c = max(contours, key=cv.contourArea) #max contour
+
+    svg_text = f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">'
+
+    for c in contours:
+        area = cv.contourArea(c)
+        if area > 20:
+            svg_text += '<path d="M'
+            for i in range(len(c)):
+                x, y = c[i][0]
+                svg_text += f"{x} {y} "
+            
+            if area > 60:
+                svg_text += ' " fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n'
+            else:
+                svg_text += ' " fill="black" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n'
+
+
+    # (thresh_inv, sketch_inv) = cv.threshold(sketch, 240, 255, cv.THRESH_BINARY_INV)
+    # contours_inv, hierarchy_inv = cv.findContours(sketch_inv, cv.RETR_EXTERNAL , cv.CHAIN_APPROX_TC89_L1)
+
+    # for c in contours_inv:
+    #     area = cv.contourArea(c)
+    #     if area > 3 and area / (w*h) < 0.5:
+    #         f.write('<path d="M')
+    #         for i in range(len(c)):
+    #             x, y = c[i][0]
+    #             f.write(f"{x} {y} ")
+    #         f.write(' " fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>\n')
+
+
+
+    # f.close()
+
+    svg_text += "</svg>"
+    print("DONE")
+
+    # # build a response dict to send back to client
+    response = {'contents': svg_text}
+
+    return jsonify(response)
+    # return Response(response={"hello": "there"}, status=200, mimetype="application/json")
