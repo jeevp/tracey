@@ -43,10 +43,7 @@ def sketch():
     (thresh, sketch) = cv.threshold(sketch, 240, 255, cv.THRESH_BINARY)
     #sketch = cv.multiply(sketch, np.array(bg), scale=(1./128))
 
-    cv.imwrite("final.png", sketch)
-
-
-
+    # cv.imwrite("final.png", sketch)
 
     h, w = sketch.shape[:2]
 
@@ -95,7 +92,6 @@ def sketch():
     #             x, y = c[i][0]
     #             f.write(f"{x} {y} ")
     #         f.write(' " fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>\n')
-
 
 
     # f.close()
