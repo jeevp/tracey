@@ -1,0 +1,54 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body data-new-gr-c-s-check-loaded="14.997.0" data-gr-ext-installed="" data-gr-ext-disabled="forever">
+        <h4>
+            <em>png/jpg -----> svg</em>
+        </h4>
+        <input type="file" name="file-input" id="file-input">
+        <button onclick="getSketch()">get sketch</button>        
+        
+        <div id="svg"></div>
+
+        <script>
+
+        
+        
+        function getSketch() {
+            console.log("trying to get sketch")
+            const fileInput = document.querySelector('#file-input') ;
+            const formData = new FormData();
+
+            formData.append('image' , fileInput.files[0]);
+
+            // var source = ''
+
+            const options = {
+            method: 'POST',
+            body: formData,
+            // If you add this, upload won't work
+            // headers: {
+            //   'Content-Type': 'multipart/form-data',
+            // }
+            };
+            fetch('/sketch', options)
+            .then(response => response.text())
+            .then((response) => {
+                r = JSON.parse(response)
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(r.contents, "image/svg+xml");
+                var $el = doc.documentElement
+
+                document.getElementById("svg").appendChild($el);
+
+            })
+            .catch(err => console.log(err))
+        }
+
+        </script>
+
+    </body>
+</html>
