@@ -17,5 +17,5 @@ class Edges:
         image_rgba = cv.cvtColor(image_gray, cv.COLOR_GRAY2RGBA)
         white = np.all(image_rgba == [255,255,255,255], axis=-1)
         image_rgba[white, -1] = 0
-        cv.imwrite("edges.png", image_gray)
+        # cv.imwrite("edges.png", image_gray)
         return image_gray 

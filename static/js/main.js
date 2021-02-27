@@ -8,6 +8,7 @@ var app = new Vue({
         before: null,
         after: null,
         dragCounter: 0,
+        loading: false,
         params: {
             threshold_type: 'gaussian',
             threshold_value: 255,
@@ -80,6 +81,7 @@ var app = new Vue({
             input.parentNode.removeChild(input);
         },
         getSketch() {
+            this.loading = true;
             console.log("attempting to get sketch")
             const formData = new FormData();
             formData.append('image', this.dz.getAcceptedFiles()[0]);
@@ -109,7 +111,8 @@ var app = new Vue({
                 $svg.appendChild($el);
 
                 this.after = $svg
-                
+
+                this.loading = false
             })
             .catch(err => console.log(err))
         }

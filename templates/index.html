@@ -69,7 +69,10 @@
                                 <span>[[ params.stroke_width ]] px</span>
                             </div>
                         </div>
-                        <button id="go" @click="getSketch">generate sketch &rarr;</button>
+                        <div class="button-row">
+                            <button id="go" @click="getSketch">generate sketch &rarr;</button>
+                            <span v-if="loading" class="loader"></span>
+                        </div>
                     </div>
                     
                     

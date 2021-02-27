@@ -78,14 +78,16 @@ footer a:hover, footer a:active {
 
 
 button {
-    padding: 0.25em 0.5em;
     font-size: 0.95em;
     background: var(--accent-color);
     border: 1px solid black;
     color: black;
     font-weight: 500;
     cursor: pointer;
-    display: block;
+    height: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 button:hover {
@@ -144,7 +146,10 @@ main section {
 .button-row {
     display: flex;
     justify-content: space-between;
-    align-content: center;
+    align-items: center;
+}
+
+#svg-container .button-row {
     padding: 1em;
     margin-top: 1em;
     border-top: 1px dashed black;
@@ -161,7 +166,7 @@ main section {
     width: 70%;
     height: auto;
     margin: 0 auto;
-    max-height: 70vh;
+    max-height: 60vh;
 }
 
 .border {
@@ -231,7 +236,7 @@ section h4 {
 }
 
 
-#params button {
+#params .button-row {
     margin-top: 1em;
 }
 
@@ -277,4 +282,21 @@ select {
     border-radius: 0;
     border-color: black;
     height: 1.5em;
+}
+
+.loader,
+.loader:after {
+    border-radius: 50%;
+    width: 1.5em;
+    height: 1.5em;
+}
+.loader {
+    margin: 0;
+    border: 1px solid black;
+    border-left: 1px solid transparent;
+    animation: load 1s infinite linear;
+}
+@keyframes load {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
