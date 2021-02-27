@@ -1,0 +1,280 @@
+html, body {
+    font-family: 'inter';
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100%;
+    font-size: 16px;
+}
+
+:root {
+    --accent-color: #fceb07;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+#upload.no-before {
+    border: 1px dashed black;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+#upload.no-before h3 {
+    font-weight: 500;
+    text-align: center;
+}
+
+
+.drag {
+    background: var(--accent-color);
+}
+
+header, footer {
+    width: 100%;
+    height: 2em;
+    display: flex;
+    padding: 0 1em;
+    align-items: center;
+    justify-content: center;
+}
+
+header {
+    background: black;
+    color: white;
+}
+
+header h3 {
+    font-weight: 400;
+    font-size: 0.9em;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    background: white;
+    border-top: 1px dashed black;
+    justify-content: space-between;
+}
+
+footer span {
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+footer a {
+    color: black;
+}
+
+footer a:hover, footer a:active {
+    background: var(--accent-color);
+}
+
+
+button {
+    padding: 0.25em 0.5em;
+    font-size: 0.95em;
+    background: var(--accent-color);
+    border: 1px solid black;
+    color: black;
+    font-weight: 500;
+    cursor: pointer;
+    display: block;
+}
+
+button:hover {
+    background: black;
+    color: white;
+    border: 1px solid black;
+}
+
+.file-info .dz-preview {
+    border: 1px dashed black;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.file-info .dz-filename {
+    font-size: 0.7em;
+    font-weight: 500;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 0.5em;
+}
+
+.dz-size, .dz-progress, .dz-button, .dz-error-message, .dz-success-mark, .dz-error-mark {
+    display: none;
+}
+
+main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1em;
+    height: calc(100% - 4em);
+    flex-wrap: wrap;
+}
+
+main section {
+    padding: 1em;
+    position: relative;
+    flex: 1;
+    height: fit-content;
+}
+
+#result {
+    flex: 3;
+}
+
+#svg-container {
+    padding-top: 1em;
+}
+
+.button-row {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    padding: 1em;
+    margin-top: 1em;
+    border-top: 1px dashed black;
+}
+
+#svg {
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    margin: 0 auto;
+}
+
+#svg svg {
+    width: 70%;
+    height: auto;
+    margin: 0 auto;
+    max-height: 70vh;
+}
+
+.border {
+    border: 1px dashed black;
+}
+
+
+.file-info::before {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: lightgray;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+section h4 {
+    margin: 0;
+    border: 1px solid black;
+    padding: 0.5em;
+    width: fit-content;
+    border-bottom: none;
+    font-weight: 500;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.droppable-prompt {
+    cursor: pointer;
+}
+
+[v-cloak] {display: none}
+
+
+#params {
+    border: 1px dashed black;
+    padding: 1em;
+    width: 350px;
+    margin: auto;
+}
+
+.input-row {
+    display: flex;
+    font-size: 0.85em;
+    font-weight: 500;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    height: 2em;
+}
+
+.input-row > * {
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    max-width: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    justify-self: flex-end;
+}
+
+.range input {
+   max-width: 100px; 
+}
+
+
+#params button {
+    margin-top: 1em;
+}
+
+svg path {
+    /* stroke: green; */
+}
+
+.range span {
+    font-size: 0.8em;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+
+
+input[type='range'] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 1em;
+    background: transparent;
+    border: 1px solid black;
+    outline: none;
+    margin: 0;
+}
+
+input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1em;
+    height: 1em;
+    background: black;
+    cursor: pointer;
+}
+
+input[type='range']::-moz-range-thumb {
+    width: 1em;
+    height: 1em;
+    background: pointer;
+    cursor: pointer;
+}
+
+select {
+    border-radius: 0;
+    border-color: black;
+    height: 1.5em;
+}

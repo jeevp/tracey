@@ -3,52 +3,109 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Document</title>
+        <link rel="stylesheet" type= "text/css" href= "{{ url_for('static', filename='css/style.css') }}">
     </head>
-    <body data-new-gr-c-s-check-loaded="14.997.0" data-gr-ext-installed="" data-gr-ext-disabled="forever">
-        <h4>
-            <em>png/jpg -----> svg</em>
-        </h4>
-        <input type="file" name="file-input" id="file-input">
-        <button onclick="getSketch()">get sketch</button>        
-        
-        <div id="svg"></div>
+    <body>
+        <div id="app" v-cloak>
 
-        <script>
+            <header>
+                <h3>
+                    <strong>tracey</strong> &mdash; [an svg line art generator]
+                </h3>
+            </header>
 
-        
-        
-        function getSketch() {
-            console.log("trying to get sketch")
-            const fileInput = document.querySelector('#file-input') ;
-            const formData = new FormData();
+            <main>
+                <section id="upload" class="dropzone" :class="{'no-before' : !before }">
+                    <h4 v-if="before">upload</h4>
+                    <h3 class="droppable-prompt" v-if="!before">drag/drop anywhere or click here to upload an image</h3>
+                    <div class="file-info droppable-prompt">
+                        <div class="dropzone-previews"></div>
+                    </div>
+                </section>
 
-            formData.append('image' , fileInput.files[0]);
+                <section id="customize" v-if="before">
+                    <h4>customize</h4>
+                    <div id="params">
+                        <div class="input-row">
+                            <label>threshold type</label>
+                            <select name="threshold_type" v-model="params.threshold_type" @change="getSketch">
+                                <option value="gaussian">gaussian</option>
+                                <option value="mean">mean value</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label>threshold inversion</label>
+                            <select name="threshold_type" v-model="params.threshold_inversion" @change="getSketch">
+                                <option value="none">none</option>
+                                <option value="invert">invert</option>
+                                <option value="both">both</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <label>threshold value</label>
+                            <div class="range">
+                                <input @change="getSketch" type="range" min="1" max="255" v-model="params.threshold_value">
+                                <span>[[ params.threshold_value ]]</span>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label>min fill area</label>
+                            <div class="range">
+                                <input @change="getSketch" type="range" min="0" max="100" v-model="params.min_fill_area">
+                                <span>[[ params.min_fill_area ]] px<sup>2</sup></span>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label>min path area</label>
+                            <div class="range">
+                                <input @change="getSketch" type="range" min="0" max="100" v-model="params.min_path_area">
+                                <span>[[ params.min_path_area ]] px<sup>2</sup></span>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label>stroke width</label>
+                            <div class="range">
+                                <input @change="getSketch" type="range" min="1" max="10" v-model="params.stroke_width">
+                                <span>[[ params.stroke_width ]] px</span>
+                            </div>
+                        </div>
+                        <button id="go" @click="getSketch">generate sketch &rarr;</button>
+                    </div>
+                    
+                    
+                </section>
 
-            // var source = ''
+                <section id="result" v-if="before">
+                    <h4 v-if="after">result</h4>
+                    <div id="svg-container" :class="{'border' : after }">
+                        <div id="svg">
+                            <!-- svg ends up here -->
+                        </div>
+                        <div class="button-row" v-if="after">
+                            <button id="go" @click="copySVG">copy svg code <></button>
+                            <button id="go" @click="downloadSVG">download .svg &darr;</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
 
-            const options = {
-            method: 'POST',
-            body: formData,
-            // If you add this, upload won't work
-            // headers: {
-            //   'Content-Type': 'multipart/form-data',
-            // }
-            };
-            fetch('/sketch', options)
-            .then(response => response.text())
-            .then((response) => {
-                r = JSON.parse(response)
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(r.contents, "image/svg+xml");
-                var $el = doc.documentElement
+            <footer>
+                <span>
+                    A tool made by
+                    <a href="https://jeev.me" target="_blank">Jeev Prayaga</a>
+                    using Flask, the OpenCV Python library, Vue and Heroku. Inspired by
+                    <a href="https://github.com/johnafish/sketchbook" target="_blank">this project</a>.
+                </span>
+                <span>
+                    &copy; TRACEY 2021 &mdash;
+                </span>
+            </footer>
 
-                document.getElementById("svg").appendChild($el);
+        </div>
 
-            })
-            .catch(err => console.log(err))
-        }
-
-        </script>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
+        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     </body>
 </html>

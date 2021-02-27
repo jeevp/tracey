@@ -15,23 +15,37 @@ def index():
 
 @app.route('/sketch', methods=['POST'])
 def sketch():
-    r = request
 
-    # f = r.files.get('image', False)
+    threshold_type = cv.ADAPTIVE_THRESH_GAUSSIAN_C
+    # invert_threshold = cv.THRESH_BINARY
+
+    if request.args.get('threshold_type') is 'mean':
+        threshold_type = cv.ADAPTIVE_THRESH_MEAN_C
+
+    if request.args.get('threshold_inversion'):
+        threshold_inversion = request.args.get('threshold_inversion')
+
+    if request.args.get('threshold_value'):
+        threshold_value = int(request.args.get('threshold_value'))
+    if request.args.get('min_fill_area'):
+        min_fill_area = int(request.args.get('min_fill_area'))
+    if request.args.get('min_path_area'):
+        min_path_area = int(request.args.get('min_path_area'))
+    if request.args.get('stroke_width'):
+        stroke_width = int(request.args.get('stroke_width'))
+
+
+    print(threshold_type)
+    print(threshold_value)
+    print(f'invert threshold: {threshold_inversion}')
+
     f = request.files['image'].read()
-
-    # print(file)
-
-    # img = cv.imread(f,0)
 
     #convert string data to numpy array
     npimg = np.fromstring(f, np.uint8)
     # convert numpy array to image
     img = cv.imdecode(npimg, cv.IMREAD_COLOR)
 
-    
-
-    
         
     sketch = Sketch(img).sketch()
     # bg = Background(img.size, octaves=6).background()
@@ -40,7 +54,7 @@ def sketch():
 
     mask = edges[3]
     sketch = cv.bitwise_and(sketch, edges, edges)
-    (thresh, sketch) = cv.threshold(sketch, 240, 255, cv.THRESH_BINARY)
+    (thresh, sketch) = cv.threshold(sketch, 240, threshold_value, cv.THRESH_BINARY)
     #sketch = cv.multiply(sketch, np.array(bg), scale=(1./128))
 
     # cv.imwrite("final.png", sketch)
@@ -51,50 +65,61 @@ def sketch():
 
     # final = Image.fromarray(img)
     # final.show()
+
     
-    # return Response(response={"hello": "there"}, status=200, mimetype="application/json")
-    
-    th2 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_MEAN_C,\
-                cv.THRESH_BINARY_INV,11,2)
 
-    th3 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
-                cv.THRESH_BINARY_INV,11,2)
+    total_area = w*h
 
-    # (thresh, sketch) = cv.threshold(sketch, 240, 255, cv.THRESH_BINARY)
-    contours, hierarchy = cv.findContours(th3, cv.RETR_EXTERNAL , cv.CHAIN_APPROX_TC89_L1)
+    header = f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg">'
 
-    # c = max(contours, key=cv.contourArea) #max contour
+    svg_text = header
 
-    svg_text = f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">'
+    paths = ''
+    inverted_paths = ''
 
-    for c in contours:
-        area = cv.contourArea(c)
-        if area > 20:
-            svg_text += '<path d="M'
-            for i in range(len(c)):
-                x, y = c[i][0]
-                svg_text += f"{x} {y} "
-            
-            if area > 60:
-                svg_text += ' " fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n'
-            else:
-                svg_text += ' " fill="black" stroke="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n'
+    if threshold_inversion == 'both' or threshold_inversion == 'none':
+        threshold = cv.adaptiveThreshold(img, threshold_value, threshold_type, cv.THRESH_BINARY, 11,2)
+        contours, hierarchy = cv.findContours(threshold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_TC89_L1)
+        # add non-inverted version
+        for c in contours:
+            area = cv.contourArea(c)
+            if (area / total_area) > (min_fill_area / total_area) * 100:
+                paths += '<path d="M'
+                for i in range(len(c)):
+                    x, y = c[i][0]
+                    paths += f"{x} {y} "
+                
+                if (area / total_area) > (min_path_area / total_area) * 100:
+                    paths += f' " fill="none" stroke="black" stroke-width="{stroke_width}" stroke-linecap="round" stroke-linejoin="round"/>\n'
+                else:
+                    paths += f' " fill="black" stroke="none" stroke-width="{stroke_width}" stroke-linecap="round" stroke-linejoin="round"/>\n'
+
+    if threshold_inversion == 'both' or threshold_inversion == 'invert':
+        # add inverted version
+        inverted_threshold = cv.adaptiveThreshold(img, threshold_value, threshold_type, cv.THRESH_BINARY_INV, 11,2)
+        inverted_contours, inverted_hierarchy = cv.findContours(inverted_threshold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_TC89_L1)
+        for c in inverted_contours:
+            area = cv.contourArea(c)
+            if (area / total_area) > (min_fill_area / total_area) * 100:
+                inverted_paths += '<path d="M'
+                for i in range(len(c)):
+                    x, y = c[i][0]
+                    inverted_paths += f"{x} {y} "
+                
+                if (area / total_area) > (min_path_area / total_area) * 100:
+                    inverted_paths += f' " fill="none" stroke="black" stroke-width="{stroke_width}" stroke-linecap="round" stroke-linejoin="round"/>\n'
+                else:
+                    inverted_paths += f' " fill="black" stroke="none" stroke-width="{stroke_width}" stroke-linecap="round" stroke-linejoin="round"/>\n'
 
 
-    # (thresh_inv, sketch_inv) = cv.threshold(sketch, 240, 255, cv.THRESH_BINARY_INV)
-    # contours_inv, hierarchy_inv = cv.findContours(sketch_inv, cv.RETR_EXTERNAL , cv.CHAIN_APPROX_TC89_L1)
+    if threshold_inversion == 'both':
+        svg_text += paths
+        svg_text += inverted_paths
+    elif threshold_inversion == 'invert':
+        svg_text += inverted_paths
+    else:
+        svg_text += paths
 
-    # for c in contours_inv:
-    #     area = cv.contourArea(c)
-    #     if area > 3 and area / (w*h) < 0.5:
-    #         f.write('<path d="M')
-    #         for i in range(len(c)):
-    #             x, y = c[i][0]
-    #             f.write(f"{x} {y} ")
-    #         f.write(' " fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>\n')
-
-
-    # f.close()
 
     svg_text += "</svg>"
     print("DONE")
