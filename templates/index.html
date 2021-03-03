@@ -2,22 +2,57 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
+        <title>tracey</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#9711;</text></svg>">
         <link rel="stylesheet" type= "text/css" href= "{{ url_for('static', filename='css/style.css') }}">
     </head>
     <body>
         <div id="app" v-cloak>
-
             <header>
-                <h3>
-                    <strong>tracey</strong> &mdash; [an svg line art generator]
+                <h3 id="name"><strong><span class="tracey-circle">&#9711;</span> tracey</strong> &mdash; an SVG line art generator</h3>
+                <h3 id="info-toggle">
+                    <a @click="info = !info">
+                        <span v-if="!info">+ about</span> 
+                        <span v-else>- hide this</span> 
+                    </a>
                 </h3>
+                <div class="info-block" id="about" v-if="info">
+                    <h4>What's this?</h4>
+                    <p>
+                        Tracey is an online tool to transform (boring) raster images into SVG line art.
+                        To get started, simply upload a PNG or JPG image.
+                        Then, play around with the settings until you're ready to download the final product.
+                    </p>
+                    <br>
+                    <h4>How it works</h4>
+                    <p> 
+                        upload raster image &#10230; convert to grayscale &#10230; apply Gaussian blur &#10230; apply threshold & Canny edge detection &#10230; map contours &#10230; smooth contours &#10230; convert to SVG paths &#10230; Bézier curve splining &#10230; export as SVG
+                    </p>
+                </div>
+                <div class="info-block" id="links" v-if="info">
+                    <h4>More info</h4>
+                    <p>
+                        Made by
+                        <a href="https://jeev.me" target="_blank">Jeev Prayaga</a>
+                        using Flask, the OpenCV Python library, Vue and Heroku.
+                        Inspired by
+                        <a href="https://github.com/johnafish/sketchbook" target="_blank">this project</a> by John Fish and
+                        <a href="https://gist.github.com/steveruizok/ced3e793c552f348e1bcd655fafde910" target="_blank">this utility function</a> by Steve Ruiz.
+                    </p>
+                    <br>
+                    <p class="flex-row">
+                        <a href="https://github.com/jeevp/tracey" target="_blank"><> view the code</a>
+                        <span><em><span class="tracey-circle">&#9711;</span> tracey 2021 &mdash;</em></span>
+                    </p>
+                </div>
             </header>
-
-            <main>
+            <main :class="{ 'faded': info }" @click="info = false">
                 <section id="upload" class="dropzone" :class="{'no-before' : !before }">
                     <h4 v-if="before">upload</h4>
-                    <h3 class="droppable-prompt" v-if="!before">drag/drop anywhere or click here to upload an image</h3>
+                    <h3 class="droppable-prompt" v-if="!before">
+                        drag/drop anywhere or click here to upload an image
+                        <span>( <em>hint</em>: portraits & headshots work the best )</span>
+                    </h3>
                     <div class="file-info droppable-prompt">
                         <div class="dropzone-previews"></div>
                     </div>
@@ -27,46 +62,75 @@
                     <h4>customize</h4>
                     <div id="params">
                         <div class="input-row">
+                            <label>trace type</label>
+                            <select name="trace_type" v-model="params.trace_type" @change="getSketch">
+                                <option value="threshold">threshold</option>
+                                <option value="edges">edges</option>
+                                <option value="both">both</option>
+                            </select>
+                        </div>
+                        <div class="input-row" :class="{ 'faded': params.trace_type == 'edges' }">
                             <label>threshold type</label>
                             <select name="threshold_type" v-model="params.threshold_type" @change="getSketch">
+                                <option value="binary">binary</option>
                                 <option value="gaussian">gaussian</option>
                                 <option value="mean">mean value</option>
                             </select>
                         </div>
-                        <div class="input-row">
-                            <label>threshold inversion</label>
-                            <select name="threshold_type" v-model="params.threshold_inversion" @change="getSketch">
-                                <option value="none">none</option>
-                                <option value="invert">invert</option>
-                                <option value="both">both</option>
-                            </select>
-                        </div>
-                        <div class="input-row">
+                        <div class="input-row" :class="{ 'faded': params.trace_type == 'edges' }">
                             <label>threshold value</label>
                             <div class="range">
                                 <input @change="getSketch" type="range" min="1" max="255" v-model="params.threshold_value">
                                 <span>[[ params.threshold_value ]]</span>
                             </div>
                         </div>
-                        <div class="input-row">
-                            <label>min fill area</label>
+                        <div class="input-row" :class="{ 'faded': params.trace_type == 'threshold' }">
+                            <label>min edge value</label>
                             <div class="range">
-                                <input @change="getSketch" type="range" min="0" max="100" v-model="params.min_fill_area">
-                                <span>[[ params.min_fill_area ]] px<sup>2</sup></span>
+                                <input @change="getSketch" type="range" min="1" max="255" v-model="params.min_edge_value">
+                                <span>[[ params.min_edge_value ]]</span>
+                            </div>
+                        </div>
+                        <div class="input-row" :class="{ 'faded': params.trace_type == 'threshold' }">
+                            <label>max edge value</label>
+                            <div class="range">
+                                <input @change="getSketch" type="range" min="1" max="255" v-model="params.max_edge_value">
+                                <span>[[ params.max_edge_value ]]</span>
                             </div>
                         </div>
                         <div class="input-row">
                             <label>min path area</label>
                             <div class="range">
-                                <input @change="getSketch" type="range" min="0" max="100" v-model="params.min_path_area">
+                                <input @change="getSketch" type="range" min="1" max="100" v-model="params.min_path_area">
                                 <span>[[ params.min_path_area ]] px<sup>2</sup></span>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label>max path area</label>
+                            <div class="range">
+                                <input @change="getSketch" type="range" min="1" max="100" v-model="params.max_path_area">
+                                <span>[[ params.max_path_area ]] px<sup>2</sup></span>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label>path complexity</label>
+                            <div class="range">
+                                <input @change="getSketch" type="range" min="0" max="5" v-model="params.path_complexity">
+                                <span>[[ params.path_complexity ]]</span>
                             </div>
                         </div>
                         <div class="input-row">
                             <label>stroke width</label>
                             <div class="range">
-                                <input @change="getSketch" type="range" min="1" max="10" v-model="params.stroke_width">
+                                <input type="range" min="1" max="10" v-model="params.stroke_width">
                                 <span>[[ params.stroke_width ]] px</span>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <label>roundness</label>
+                            <div class="range">
+                                <input type="range" min="0" step="0.5" max="4" v-model="params.roundness">
+                                <span>[[ params.roundness ]]</span>
                             </div>
                         </div>
                         <div class="button-row">
@@ -79,12 +143,42 @@
                 </section>
 
                 <section id="result" v-if="before">
-                    <h4 v-if="after">result</h4>
-                    <div id="svg-container" :class="{'border' : after }">
-                        <div id="svg">
-                            <!-- svg ends up here -->
+                    <h4 v-if="result">result</h4>
+                    <div id="svg-container" :class="{'border' : result }">
+                        <span class="alert warning" v-if="result && numPaths > 300">
+                            WARNING &mdash; too many paths can result in a large file size
+                        </span>
+                        <span class="alert info" v-else-if="result && numPaths < 300">
+                            Drag to select paths and hit delete &#9003; to remove them.
+                        </span>
+                        <div id="svg" v-if="result">
+                            <svg
+                                id="tracey"
+                                ref="tracey"
+                                xmlns="http://www.w3.org/2000/svg"
+                                version="1.1"
+                            >    
+                                <g
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    :stroke-width="params.stroke_width"
+                                    stroke="black"
+                                    fill="none"
+                                >
+                                    <path
+                                        v-for="(path, index) in result.paths"
+                                        :d="pathToString(getSpline(path))"
+                                        :id="'Path ' + index"
+                                    >
+                                    </path>
+                                </g>
+                                <svg:style>
+                                    path { animation: dash 2s linear forwards; }
+                                    @keyframes dash { to { stroke-dashoffset: 0; } }
+                                </style>
+                            </svg>
                         </div>
-                        <div class="button-row" v-if="after">
+                        <div class="button-row" v-if="result">
                             <button id="go" @click="copySVG">copy svg code <></button>
                             <button id="go" @click="downloadSVG">download .svg &darr;</button>
                         </div>
@@ -92,22 +186,10 @@
                 </section>
             </main>
 
-            <footer>
-                <span>
-                    A tool made by
-                    <a href="https://jeev.me" target="_blank">Jeev Prayaga</a>
-                    using Flask, the OpenCV Python library, Vue and Heroku. Inspired by
-                    <a href="https://github.com/johnafish/sketchbook" target="_blank">this project</a>.
-                </span>
-                <span>
-                    &copy; TRACEY 2021 &mdash;
-                </span>
-            </footer>
-
         </div>
-
+        <script src="https://dragselect.com/v2/ds.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-        <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
+        <script src="{{ url_for('static', filename='js/dropzone.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     </body>
