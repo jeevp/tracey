@@ -17,7 +17,7 @@ class Tracey:
         
         self.threshold = None
         self.edges = None
-        self.contours = None
+        self.contours = []
         self.paths = []
         self.svg_string = None
 
@@ -47,11 +47,11 @@ class Tracey:
         threshold_contours = []
         edge_contours = []
         if self.threshold is not None:
-            threshold_contours, hierarchy = cv.findContours(self.threshold, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+            threshold_contours, _ = cv.findContours(self.threshold, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
         if self.edges is not None:
-            edge_contours, hierarchy = cv.findContours(self.edges, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
-        
-        self.contours = threshold_contours + edge_contours
+            edge_contours, _ = cv.findContours(self.edges, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+
+        self.contours = list(threshold_contours) + (list(edge_contours))
 
     def smooth_contours(self):
         smoothened = []

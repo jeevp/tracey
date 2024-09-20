@@ -146,7 +146,4 @@ dmypy.json
 # profiling data
 .prof
 
-*.png
-*.jpg
-
 # End of https://www.toptal.com/developers/gitignore/api/flask

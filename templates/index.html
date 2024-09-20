@@ -187,10 +187,10 @@
             </main>
 
         </div>
-        <script src="https://dragselect.com/v2/ds.min.js"></script>
+        <script src="https://unpkg.com/dragselect@latest/dist/ds.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <script src="{{ url_for('static', filename='js/dropzone.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+        <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     </body>
 </html>
